@@ -921,14 +921,15 @@ def iopMeta(soup, doi, url):
         if ("href" in tagA.attrs):
             if ('''/author/''' in tagA["href"]):
                 outputDict["Author"].append(tagA.string.strip())
-    # Institution    
+    # Institution
+    inst = []
     tagDivs = soup.find_all("div")
     for tagDiv in tagDivs:
         if ("class" in tagDiv.attrs):
             if ("affiliations" in str(tagDiv["class"])):
                 inst = tagDiv # save the right <div></div> pair
     # each institution is saved in tag p
-    insts = inst.find_all("p")
+    insts = inst.find_all("p") if type(inst) != list else []
     # loop through all institutions
     for institution in insts:
         # convert to string
@@ -1190,11 +1191,11 @@ def getMetaFromSoup(metas, name):
 # initialize a dictionary to map all meta datas
 # DOI is loaded into the dictionary at the time of creation
 def makeMetaDict(doi):
-    pairs = [("Publication", []), ("Title", []), ("Author", []), ("Keyword", []), 
-             ("Publisher", []), ("PublicationYear", []), ("DOI", [unicode(doi)]), 
-             ("Volume", []), ("URL", []), ("Language", [u'English']),
-             ("Institution", []), ("DateOfCitation", []),
-             ("ISSN", []), ("Issue", [])]
+    pairs = [("CitationType", []), ("Publication", []), ("Title", []),
+             ("Author", []), ("Keyword", []), ("Publisher", []),
+             ("PublicationYear", []), ("DOI", [unicode(doi)]), ("Volume", []),
+             ("URL", []), ("Language", [u'English']), ("Institution", []),
+             ("DateOfCitation", []), ("ISSN", []), ("Issue", [])]
     metaDict = collections.OrderedDict(pairs) # initialize the dictionary
     return metaDict
 
@@ -1231,6 +1232,8 @@ def nameLastFirst(nameList):
 
 # main function, input doi string, output meta data in a dictionary
 def mainDOI(doi):
+    if not doiValid(doi):
+        return {}
     queryDict = runDOIquery(doi)
     if len(queryDict) > 0:
         return queryDict
@@ -1250,6 +1253,34 @@ def mainDOI(doi):
 ##        print key + " : " + str(myDict[key])
 ##        print "==============================================="
     return myDict
+
+# main function, input doi string, output meta data in a dictionary, use bs4
+# module first
+def mainDOIsoupFirst(doi):
+    if not doiValid(doi):
+        return {}
+    url = doiToURL(doi)
+    (url, publisher) = fetchRdrctURLPub(url)
+    # txt = fetchTxtByURL(url)
+    myDict = collectMeta(doi, url, publisher)
+    myDict["DateOfCitation"].append(date.today().isoformat())
+    # extract year from date
+    if (myDict["PublicationYear"] != []):
+        myDict["PublicationYear"] = [yearFromDate(myDict["PublicationYear"][0])]
+    # replace &amp; with & in Institutions
+    for i in xrange(len(myDict["Institution"])):
+        if "&amp;" in myDict["Institution"][i]:
+            myDict["Institution"][i] = myDict["Institution"][i].replace('&amp;','and')
+    # call query module to fill in the blank
+    queryDict = runDOIquery(doi)
+    myDict.update(queryDict) # update dict by bs4 module with query dict
+    return myDict
+
+# avoid Http 404 when users input invalid doi
+def doiValid(doi):
+    if len(runDOIquery(doi)) == 0:
+        return False
+    return True
 
 if __name__ == "__main__":
 ##    testDOI = "10.1002/adfm.200700200" # wiley test 1 PASS
@@ -1277,7 +1308,7 @@ if __name__ == "__main__":
 ##    testDOI = "10.1063/1.3487275" # aip test 3, PASS
     testDOI = "10.1088/1757-899X/73/1/012015" # iop test 1 PASS
 ##    testDOI = "10.1016/j.jcis.2017.02.001"
-    testDict = mainDOI(testDOI)
+    testDict = mainDOIsoupFirst(testDOI)
     for key in testDict:
         print key + " : " + str(testDict[key])
         print "==============================================="
