@@ -1,4 +1,4 @@
-# DOI meta-data retriever
+# DOI meta-data retriever (python 3 and python 2.7)
 
 By Bingyin Hu
 
@@ -7,20 +7,21 @@ Wiley, RSC, AIP, ACS, APS, Nature, Taylor & Francis, Springer, Sage, AIAA, MDPI,
 IOP. Also compatible for other publishing groups whose websites follow standard 
 meta info formatting.
 
+### Python 2.7 version see 'python2.7' branch. For Python 3+, use the 'master' branch directly.
+
 ### 1. System preparation
 
 Required packages:
 
+- MechanicalSoup
+  - https://mechanicalsoup.readthedocs.io/en/stable/
+  - A python3 alternative for mechanize.
+
 - Beautiful Soup 4
-  - doc: https://www.crummy.com/software/BeautifulSoup/bs4/doc/index.html
+  - https://www.crummy.com/software/BeautifulSoup/bs4/doc/index.html
     
 - os
   - Python default package
-
-- mechanize
-  - https://github.com/sparklemotion/mechanize
-  - "Mechanize is a ruby library that makes automated web interaction easy."
-  - Used here to fetch information from websites.
 
 - ast
   - Python default package
@@ -84,3 +85,5 @@ Checklist for adding a new journal site if it cannot be queried from CrossRef:
 
 Note: Keywords are not available through query. Affiliations might not be 
       fetchable in some cases.
+
+07/01/2019: The whole project is modified to use python 3.
